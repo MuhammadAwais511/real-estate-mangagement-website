@@ -9,7 +9,7 @@ import { formatPrice, formatDate } from "@/utils/format";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { Booking, STORAGE_KEYS } from "@/utils/storage";
 
-// Validation helper
+// Validation helpers
 const validateEmail = (email: string): boolean => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return emailRegex.test(email);
@@ -21,14 +21,20 @@ const validatePhone = (phone: string): boolean => {
 };
 
 export default function PropertyDetails({ property }: { property: Property }) {
-  const [favorites, setFavorites] = useLocalStorage<string[]>(STORAGE_KEYS.favorites, []);
-  const [, setBookings] = useLocalStorage<Booking[]>(STORAGE_KEYS.bookings, []);
+  const [favorites, setFavorites] = useLocalStorage<string[]>(
+    STORAGE_KEYS.favorites,
+    []
+  );
+  const [, setBookings] = useLocalStorage<Booking[]>(
+    STORAGE_KEYS.bookings,
+    []
+  );
   const [, setViewed] = useLocalStorage<string[]>(STORAGE_KEYS.viewed, []);
 
   // UI State
-  const [isConfirmed, setIsConfirmed] = useState(false);
-  const [showBookingModal, setShowBookingModal] = useState(false);
-  
+  const [isConfirmed, setIsConfirmed] = useState<boolean>(false);
+  const [showBookingModal, setShowBookingModal] = useState<boolean>(false);
+
   // Form State
   const [bookingForm, setBookingForm] = useState({
     name: "",
@@ -38,9 +44,11 @@ export default function PropertyDetails({ property }: { property: Property }) {
     time: "",
     note: "",
   });
-  
+
   // Booking State
-  const [bookingStatus, setBookingStatus] = useState<"idle" | "saving" | "error" | "success">("idle");
+  const [bookingStatus, setBookingStatus] = useState<
+    "idle" | "saving" | "error" | "success"
+  >("idle");
   const [bookingError, setBookingError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
@@ -89,10 +97,10 @@ export default function PropertyDetails({ property }: { property: Property }) {
   };
 
   const handleFormChange = (field: string, value: string) => {
-    setBookingForm(prev => ({ ...prev, [field]: value }));
+    setBookingForm((prev) => ({ ...prev, [field]: value }));
     // Clear field error when user starts typing
     if (fieldErrors[field]) {
-      setFieldErrors(prev => {
+      setFieldErrors((prev) => {
         const newErrors = { ...prev };
         delete newErrors[field];
         return newErrors;
@@ -145,6 +153,8 @@ export default function PropertyDetails({ property }: { property: Property }) {
       return;
     }
 
+    const bookingNote = `${bookingForm.name} | ${bookingForm.email} | ${bookingForm.date} | ${bookingForm.time}${bookingForm.note ? ` | Note: ${bookingForm.note}` : ""}`;
+
     const booking: Booking = {
       id: `booking-${property.id}-${Date.now()}`,
       propertyId: property.id,
@@ -153,10 +163,10 @@ export default function PropertyDetails({ property }: { property: Property }) {
       amount: property.price,
       date: formatDate(new Date()),
       phone: bookingForm.phone.trim(),
-      note: `${bookingForm.name} | ${bookingForm.email} | ${bookingForm.date} | ${bookingForm.time}${bookingForm.note ? ` | Note: ${bookingForm.note}` : ""}`,
+      note: bookingNote,
     };
 
-    console.log("📤 Sending booking:", booking);
+    console.log("Sending booking:", booking);
 
     setBookingStatus("saving");
     setBookingError(null);
@@ -173,7 +183,9 @@ export default function PropertyDetails({ property }: { property: Property }) {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data?.error || "Failed to save booking. Please try again.");
+        throw new Error(
+          data?.error || "Failed to save booking. Please try again."
+        );
       }
 
       // Save locally
@@ -191,9 +203,8 @@ export default function PropertyDetails({ property }: { property: Property }) {
         time: "",
         note: "",
       });
-
     } catch (error) {
-      console.error("❌ Booking error:", error);
+      console.error("Booking error:", error);
       setBookingStatus("error");
       setBookingError(
         error instanceof Error
@@ -203,7 +214,7 @@ export default function PropertyDetails({ property }: { property: Property }) {
     }
   };
 
-  const features = property.features.slice(0, 4);
+  const features = property.features?.slice(0, 4) || [];
   const availabilityLabel = property.available ? "Available now" : "Sold out";
 
   return (
@@ -213,13 +224,23 @@ export default function PropertyDetails({ property }: { property: Property }) {
         <div className="rounded-[36px] border border-white/10 bg-slate-950/80 p-6 shadow-2xl shadow-slate-950/20 backdrop-blur-xl sm:p-8">
           <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
             <div className="max-w-3xl space-y-4">
-              <p className="text-sm uppercase tracking-[0.3em] text-cyan-300/90">Property details</p>
-              <h1 className="text-4xl font-semibold text-white">{property.title}</h1>
-              <p className="text-slate-400">{property.location} • {property.type}</p>
+              <p className="text-sm uppercase tracking-[0.3em] text-cyan-300/90">
+                Property details
+              </p>
+              <h1 className="text-4xl font-semibold text-white">
+                {property.title}
+              </h1>
+              <p className="text-slate-400">
+                {property.location} • {property.type}
+              </p>
             </div>
             <div className="space-y-3 text-right">
-              <p className="text-sm uppercase tracking-[0.28em] text-slate-400">{availabilityLabel}</p>
-              <p className="text-3xl font-semibold text-cyan-300">{formatPrice(property.price)}</p>
+              <p className="text-sm uppercase tracking-[0.28em] text-slate-400">
+                {availabilityLabel}
+              </p>
+              <p className="text-3xl font-semibold text-cyan-300">
+                {formatPrice(property.price)}
+              </p>
               <button
                 type="button"
                 onClick={handleToggleFavorite}
@@ -227,12 +248,12 @@ export default function PropertyDetails({ property }: { property: Property }) {
               >
                 {isFavorite ? (
                   <>
-                    <span>❤️</span>
+                    <span aria-hidden="true">❤️</span>
                     <span>Remove favorite</span>
                   </>
                 ) : (
                   <>
-                    <span>🤍</span>
+                    <span aria-hidden="true">🤍</span>
                     <span>Save favorite</span>
                   </>
                 )}
@@ -250,16 +271,25 @@ export default function PropertyDetails({ property }: { property: Property }) {
             )}
             <div className="rounded-4xl border border-white/10 bg-slate-950/80 p-6 shadow-2xl shadow-slate-950/20">
               <h2 className="text-2xl font-semibold text-white">Overview</h2>
-              <p className="mt-4 text-slate-400 leading-7">{property.description}</p>
+              <p className="mt-4 text-slate-400 leading-7">
+                {property.description}
+              </p>
               <div className="mt-6 grid gap-3 sm:grid-cols-3">
                 {[
                   { label: "Bedrooms", value: property.bedrooms },
                   { label: "Bathrooms", value: property.bathrooms },
                   { label: "Area", value: `${property.area} sqft` },
                 ].map((item) => (
-                  <div key={item.label} className="rounded-3xl bg-slate-900/70 p-5">
-                    <p className="text-xs uppercase tracking-[0.24em] text-slate-500">{item.label}</p>
-                    <p className="mt-2 text-2xl font-semibold text-white">{item.value}</p>
+                  <div
+                    key={item.label}
+                    className="rounded-3xl bg-slate-900/70 p-5"
+                  >
+                    <p className="text-xs uppercase tracking-[0.24em] text-slate-500">
+                      {item.label}
+                    </p>
+                    <p className="mt-2 text-2xl font-semibold text-white">
+                      {item.value}
+                    </p>
                   </div>
                 ))}
               </div>
@@ -274,17 +304,24 @@ export default function PropertyDetails({ property }: { property: Property }) {
               transition={{ duration: 0.3 }}
               className="rounded-4xl border border-white/10 bg-slate-950/80 p-6 shadow-2xl shadow-slate-950/20"
             >
-              <p className="text-sm uppercase tracking-[0.3em] text-cyan-300/90">Booking</p>
+              <p className="text-sm uppercase tracking-[0.3em] text-cyan-300/90">
+                Booking
+              </p>
               <div className="mt-4 space-y-4">
                 <p className="text-sm text-slate-400">
-                  Reserve instantly. Your booking will be saved to the dashboard.
+                  Reserve instantly. Your booking will be saved to the
+                  dashboard.
                 </p>
                 <label className="block text-sm">
-                  <span className="text-slate-400">Booking note (optional)</span>
+                  <span className="text-slate-400">
+                    Booking note (optional)
+                  </span>
                   <input
                     type="text"
                     value={bookingForm.note}
-                    onChange={(e) => handleFormChange("note", e.target.value)}
+                    onChange={(e) =>
+                      handleFormChange("note", e.target.value)
+                    }
                     placeholder="Special request or move-in note"
                     disabled={isConfirmed}
                     className="mt-3 w-full rounded-3xl border border-white/10 bg-slate-900/70 px-4 py-3 text-white placeholder-slate-500 outline-none transition focus:border-cyan-400 disabled:opacity-50"
@@ -302,17 +339,26 @@ export default function PropertyDetails({ property }: { property: Property }) {
                       : "bg-cyan-400 text-slate-950 hover:bg-cyan-300 active:bg-cyan-500"
                   }`}
                 >
-                  {!property.available ? "Sold out" : isConfirmed ? "✓ Booked" : "Book a Viewing"}
+                  {!property.available
+                    ? "Sold out"
+                    : isConfirmed
+                    ? "✓ Booked"
+                    : "Book a Viewing"}
                 </button>
               </div>
             </motion.div>
 
             {features.length > 0 && (
               <div className="rounded-4xl border border-white/10 bg-slate-950/80 p-6 shadow-2xl shadow-slate-950/20">
-                <p className="text-sm uppercase tracking-[0.3em] text-slate-400">Features</p>
+                <p className="text-sm uppercase tracking-[0.3em] text-slate-400">
+                  Features
+                </p>
                 <div className="mt-4 grid gap-3">
                   {features.map((feature) => (
-                    <div key={feature} className="rounded-3xl bg-slate-900/70 px-4 py-3 text-sm text-slate-200">
+                    <div
+                      key={feature}
+                      className="rounded-3xl bg-slate-900/70 px-4 py-3 text-sm text-slate-200"
+                    >
                       {feature}
                     </div>
                   ))}
@@ -332,14 +378,19 @@ export default function PropertyDetails({ property }: { property: Property }) {
               transition={{ duration: 0.3 }}
               className="rounded-4xl border border-cyan-300/20 bg-cyan-300/10 p-6 text-slate-100 shadow-inner shadow-cyan-300/10"
             >
-              <p className="text-lg font-semibold text-cyan-100">✓ Booking Confirmed!</p>
+              <p className="text-lg font-semibold text-cyan-100">
+                Booking Confirmed!
+              </p>
               <p className="mt-2 text-sm text-slate-200">
-                Your viewing for <strong>{property.title}</strong> has been saved to your dashboard.
+                Your viewing for <strong>{property.title}</strong> has been
+                saved to your dashboard.
               </p>
               <p className="mt-2 text-sm text-slate-200">
                 Our team will contact you shortly to confirm the appointment.
               </p>
-              <p className="mt-1 text-sm text-slate-400">Booked on {formatDate(new Date())}</p>
+              <p className="mt-1 text-sm text-slate-400">
+                Booked on {formatDate(new Date())}
+              </p>
               <div className="mt-4 flex flex-wrap gap-3">
                 <Link
                   href="/dashboard"
@@ -376,9 +427,12 @@ export default function PropertyDetails({ property }: { property: Property }) {
               >
                 <div className="flex items-start justify-between mb-8">
                   <div>
-                    <h2 className="text-3xl font-semibold text-slate-950">Book a Viewing</h2>
+                    <h2 className="text-3xl font-semibold text-slate-950">
+                      Book a Viewing
+                    </h2>
                     <p className="mt-2 text-sm text-slate-500">
-                      Complete the form and our agent will contact you to confirm the appointment.
+                      Complete the form and our agent will contact you to
+                      confirm the appointment.
                     </p>
                   </div>
                   <button
@@ -387,8 +441,18 @@ export default function PropertyDetails({ property }: { property: Property }) {
                     className="rounded-full bg-slate-100 p-3 text-slate-600 transition hover:bg-slate-200 hover:text-slate-800"
                     aria-label="Close booking form"
                   >
-                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M6 18L18 6M6 6l12 12"
+                      />
                     </svg>
                   </button>
                 </div>
@@ -401,12 +465,20 @@ export default function PropertyDetails({ property }: { property: Property }) {
                     <input
                       type="text"
                       value={bookingForm.name}
-                      onChange={(e) => handleFormChange("name", e.target.value)}
+                      onChange={(e) =>
+                        handleFormChange("name", e.target.value)
+                      }
                       placeholder="Enter your full name"
-                      className={`w-full rounded-3xl border ${fieldErrors.name ? 'border-red-400' : 'border-slate-300'} bg-white px-4 py-4 text-slate-900 placeholder-slate-400 outline-none transition focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20`}
+                      className={`w-full rounded-3xl border ${
+                        fieldErrors.name
+                          ? "border-red-400"
+                          : "border-slate-300"
+                      } bg-white px-4 py-4 text-slate-900 placeholder-slate-400 outline-none transition focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20`}
                     />
                     {fieldErrors.name && (
-                      <p className="mt-1 text-sm text-red-500">{fieldErrors.name}</p>
+                      <p className="mt-1 text-sm text-red-500">
+                        {fieldErrors.name}
+                      </p>
                     )}
                   </div>
 
@@ -417,12 +489,20 @@ export default function PropertyDetails({ property }: { property: Property }) {
                     <input
                       type="email"
                       value={bookingForm.email}
-                      onChange={(e) => handleFormChange("email", e.target.value)}
+                      onChange={(e) =>
+                        handleFormChange("email", e.target.value)
+                      }
                       placeholder="your@email.com"
-                      className={`w-full rounded-3xl border ${fieldErrors.email ? 'border-red-400' : 'border-slate-300'} bg-white px-4 py-4 text-slate-900 placeholder-slate-400 outline-none transition focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20`}
+                      className={`w-full rounded-3xl border ${
+                        fieldErrors.email
+                          ? "border-red-400"
+                          : "border-slate-300"
+                      } bg-white px-4 py-4 text-slate-900 placeholder-slate-400 outline-none transition focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20`}
                     />
                     {fieldErrors.email && (
-                      <p className="mt-1 text-sm text-red-500">{fieldErrors.email}</p>
+                      <p className="mt-1 text-sm text-red-500">
+                        {fieldErrors.email}
+                      </p>
                     )}
                   </div>
 
@@ -433,12 +513,20 @@ export default function PropertyDetails({ property }: { property: Property }) {
                     <input
                       type="tel"
                       value={bookingForm.phone}
-                      onChange={(e) => handleFormChange("phone", e.target.value)}
+                      onChange={(e) =>
+                        handleFormChange("phone", e.target.value)
+                      }
                       placeholder="+92 300 1234567"
-                      className={`w-full rounded-3xl border ${fieldErrors.phone ? 'border-red-400' : 'border-slate-300'} bg-white px-4 py-4 text-slate-900 placeholder-slate-400 outline-none transition focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20`}
+                      className={`w-full rounded-3xl border ${
+                        fieldErrors.phone
+                          ? "border-red-400"
+                          : "border-slate-300"
+                      } bg-white px-4 py-4 text-slate-900 placeholder-slate-400 outline-none transition focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20`}
                     />
                     {fieldErrors.phone && (
-                      <p className="mt-1 text-sm text-red-500">{fieldErrors.phone}</p>
+                      <p className="mt-1 text-sm text-red-500">
+                        {fieldErrors.phone}
+                      </p>
                     )}
                   </div>
 
@@ -450,12 +538,20 @@ export default function PropertyDetails({ property }: { property: Property }) {
                       <input
                         type="date"
                         value={bookingForm.date}
-                        onChange={(e) => handleFormChange("date", e.target.value)}
-                        min={new Date().toISOString().split('T')[0]}
-                        className={`w-full rounded-3xl border ${fieldErrors.date ? 'border-red-400' : 'border-slate-300'} bg-white px-4 py-4 text-slate-900 outline-none transition focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20`}
+                        onChange={(e) =>
+                          handleFormChange("date", e.target.value)
+                        }
+                        min={new Date().toISOString().split("T")[0]}
+                        className={`w-full rounded-3xl border ${
+                          fieldErrors.date
+                            ? "border-red-400"
+                            : "border-slate-300"
+                        } bg-white px-4 py-4 text-slate-900 outline-none transition focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20`}
                       />
                       {fieldErrors.date && (
-                        <p className="mt-1 text-sm text-red-500">{fieldErrors.date}</p>
+                        <p className="mt-1 text-sm text-red-500">
+                          {fieldErrors.date}
+                        </p>
                       )}
                     </div>
 
@@ -466,11 +562,19 @@ export default function PropertyDetails({ property }: { property: Property }) {
                       <input
                         type="time"
                         value={bookingForm.time}
-                        onChange={(e) => handleFormChange("time", e.target.value)}
-                        className={`w-full rounded-3xl border ${fieldErrors.time ? 'border-red-400' : 'border-slate-300'} bg-white px-4 py-4 text-slate-900 outline-none transition focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20`}
+                        onChange={(e) =>
+                          handleFormChange("time", e.target.value)
+                        }
+                        className={`w-full rounded-3xl border ${
+                          fieldErrors.time
+                            ? "border-red-400"
+                            : "border-slate-300"
+                        } bg-white px-4 py-4 text-slate-900 outline-none transition focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20`}
                       />
                       {fieldErrors.time && (
-                        <p className="mt-1 text-sm text-red-500">{fieldErrors.time}</p>
+                        <p className="mt-1 text-sm text-red-500">
+                          {fieldErrors.time}
+                        </p>
                       )}
                     </div>
                   </div>
@@ -492,14 +596,32 @@ export default function PropertyDetails({ property }: { property: Property }) {
                     <button
                       type="button"
                       onClick={handleBook}
-                      disabled={!property.available || bookingStatus === "saving"}
+                      disabled={
+                        !property.available ||
+                        bookingStatus === "saving"
+                      }
                       className="flex-1 rounded-3xl bg-slate-900 px-6 py-4 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-400"
                     >
                       {bookingStatus === "saving" ? (
                         <span className="flex items-center justify-center gap-2">
-                          <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                          <svg
+                            className="animate-spin h-4 w-4"
+                            viewBox="0 0 24 24"
+                          >
+                            <circle
+                              className="opacity-25"
+                              cx="12"
+                              cy="12"
+                              r="10"
+                              stroke="currentColor"
+                              strokeWidth="4"
+                              fill="none"
+                            />
+                            <path
+                              className="opacity-75"
+                              fill="currentColor"
+                              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                            />
                           </svg>
                           Processing...
                         </span>
