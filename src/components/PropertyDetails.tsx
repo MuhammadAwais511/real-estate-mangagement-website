@@ -155,16 +155,17 @@ export default function PropertyDetails({ property }: { property: Property }) {
 
     const bookingNote = `${bookingForm.name} | ${bookingForm.email} | ${bookingForm.date} | ${bookingForm.time}${bookingForm.note ? ` | Note: ${bookingForm.note}` : ""}`;
 
-    const booking: Booking = {
-      id: `booking-${property.id}-${Date.now()}`,
-      propertyId: property.id,
-      propertyTitle: property.title,
-      location: property.location,
-      amount: property.price,
-      date: formatDate(new Date()),
-      phone: bookingForm.phone.trim(),
-      note: bookingNote,
-    };
+   const booking: Booking = {
+  id: `booking-${property.id}-${Date.now()}`,
+  propertyId: property.id,
+  propertyTitle: property.title,
+  location: property.location,
+  amount: property.price,
+  date: formatDate(new Date()),
+  createdAt: new Date().toISOString(), // ← add this
+  phone: bookingForm.phone.trim(),
+  note: `...`,
+};
 
     console.log("Sending booking:", booking);
 
