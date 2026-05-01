@@ -7,6 +7,8 @@ export type Booking = {
   date: string;
   phone: string;
   note?: string;
+
+  createdAt: string; // ✅ ADD THIS
 };
 
 export const STORAGE_KEYS = {
